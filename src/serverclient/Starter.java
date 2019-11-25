@@ -20,8 +20,8 @@ public class Starter {
     private static void addRules(JSONObject jsonObject) {
         try {
             String[] sites = (String[]) jsonObject.get("sites");
-            for (Object site : sites) {
-                ConnectionFilters.addBlockedSite((String) site);
+            for (String site : sites) {
+                ConnectionFilters.addBlockedSite(site);
             }
             String[] protocol = (String[]) jsonObject.get("protocol");
             for (String prot : protocol) {
@@ -32,7 +32,7 @@ public class Starter {
                 try {
                     ConnectionFilters.addBlockedPorts(port);
                 } catch (ArithmeticException ex) {
-                    //do nothing
+                    //do nothing.
                 }
             }
         } catch (JSONException ex) {

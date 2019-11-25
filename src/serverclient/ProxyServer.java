@@ -159,7 +159,6 @@ public class ProxyServer extends Thread {
     private void processHTTPSRequest() {
         try {
             socketFromProxyServer = new Socket(host, port);
-
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyToClientOP));
             writer.write("HTTP/1.1 200 Connection established\r\n" + "\r\n");
             writer.flush();
