@@ -30,7 +30,7 @@ public class ConnectionFilters {
 
     public static boolean isSiteBlocked(String host) {
         String temp = host;
-        if ("www.".equals(host.substring(0, 3))) {
+        if (host.length() > 2 && "www.".equals(host.substring(0, 3))) {
             temp = host.substring(4);
         }
         return blockedSites.contains(temp);

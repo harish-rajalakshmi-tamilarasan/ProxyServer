@@ -1,19 +1,31 @@
 package serverclient;
 
 import configurations.ConnectionFilters;
+import dbhandler.DBInitializer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * @author Harish T
  */
 public class Starter {
-    public static void main(String[] args) throws Exception {
-        JSONObject jsonObject = new JSONObject(new FileReader(new File("E:\\ProxyServer\\conf\\Rules.json")));
-        addRules(jsonObject);
+
+    public static void main(String[] args) {
+        try {
+            JSONObject jsonObject = new JSONObject(new FileReader(new File("E:\\ProxyServer\\conf\\Rules.json")));
+        } catch (IOException ex) {
+            System.out.println("JSON Exception" + ex);
+        }
+        try {
+            DBInitializer.initDB();
+        } catch (SQLException ex) {
+            System.exit(0);
+        }
         Server.proxyListener();
     }
 

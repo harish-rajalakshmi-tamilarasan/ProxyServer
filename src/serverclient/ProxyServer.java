@@ -1,9 +1,11 @@
 package serverclient;
 
 import configurations.ConnectionFilters;
+import dbhandler.DBOperationUtil;
 
 import java.io.*;
 import java.net.*;
+import java.sql.SQLException;
 
 
 /**
@@ -94,7 +96,7 @@ public class ProxyServer extends Thread {
             }
 
         } catch (IOException ex) {
-            System.out.println(" Error in Run method" + ex);
+            //  System.out.println(" Error in Run method" + ex);
         } finally {
             try {
                 proxyToClientIP.close();
@@ -103,7 +105,7 @@ public class ProxyServer extends Thread {
                 proxyToServerOP.close();
                 socket.close();
             } catch (Exception e) {
-                System.out.println(e);
+                //  System.out.println(e);
             }
         }
     }
@@ -134,10 +136,7 @@ public class ProxyServer extends Thread {
             }
             host = urlString;
         } catch (ArrayIndexOutOfBoundsException ex) {
-            for (String temp : hostDetail) {
-                System.out.println(temp);
-            }
-            throw ex;
+            System.out.println(hostDetail);
         }
     }
 
@@ -149,7 +148,7 @@ public class ProxyServer extends Thread {
             proxyToServerIP = socketFromProxyServer.getInputStream();
             proxyRequest();
         } catch (IOException ex) {
-            System.out.println("In Processing Get Method" + ex);
+            //   System.out.println("In Processing Get Method" + ex);
         }
     }
 
@@ -166,14 +165,15 @@ public class ProxyServer extends Thread {
             proxyToServerIP = socketFromProxyServer.getInputStream();
             proxyRequest();
         } catch (IOException ex) {
-            System.out.println("In processing connect" + ex);
+            //  System.out.println("In processing connect" + ex);
         }
     }
 
 
     private void proxyRequest() {
         try {
-            new Thread() {
+            System.out.println("Host details is "+host);
+            Thread t = new Thread() {
                 @Override
                 public void run() {
                     try {
@@ -188,14 +188,14 @@ public class ProxyServer extends Thread {
                             proxyToServerOP.write(read, 0, in);
                             proxyToServerOP.flush();
                         }
-                        System.out.println("requestSze" + requestSize);
                         proxyToServerOP.close();
                         proxyToClientIP.close();
                     } catch (IOException ex) {
-                        System.out.println("Exception in Proxy to Server Method" + ex);
+                        // System.out.println("Exception in Proxy to Server Method" + ex);
                     }
                 }
-            }.start();
+            };
+            t.start();
             byte[] reply = new byte[1024];
             int out;
             while ((out = proxyToServerIP.read(reply)) != -1) {
@@ -203,12 +203,24 @@ public class ProxyServer extends Thread {
                 proxyToClientOP.write(reply, 0, out);
                 proxyToClientOP.flush();
             }
-            System.out.println("responseSize = " + responseSize);
+            try {
+                t.join();
+                System.out.println(responseSize);
+            } catch (InterruptedException ex) {
+                System.out.println("interrupted error" + ex);
+            }
+            try {
+                new DBOperationUtil().runQuery(host, port, protocol, requestSize, responseSize);
+            } catch (SQLException ex) {
+                System.out.println("sql exception=" + ex);
+            }
             proxyToClientOP.close();
             proxyToServerIP.close();
         } catch (IOException ex) {
-            System.out.println("Exception in Proxy to Client method" + ex);
+            // System.out.println("Exception in Proxy to Client method" + ex);
         }
     }
+
+
 }
 
