@@ -11,9 +11,6 @@ public class ConnectionsData {
 
     public static synchronized void addToRequestSize(String host, int size) {
         String temp = host;
-        if ("www.".equals(host.substring(0, 3))) {
-            temp = host.substring(4);
-        }
         if (requestMap.containsKey(host)) {
             requestMap.put(temp, requestMap.get(host));
         } else requestMap.put(host, size);
@@ -21,9 +18,6 @@ public class ConnectionsData {
 
     public static synchronized void addToResponseSize(String host, int size) {
         String temp = host;
-        if ("www.".equals(host.substring(0, 3))) {
-            temp = host.substring(4);
-        }
         if (responseMap.containsKey(host)) {
             responseMap.put(temp, responseMap.get(host));
         } else responseMap.put(host, size);

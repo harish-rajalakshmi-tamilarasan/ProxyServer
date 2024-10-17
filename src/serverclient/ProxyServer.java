@@ -1,49 +1,48 @@
 package serverclient;
 
 import configurations.ConnectionFilters;
-import dbhandler.DBOperationUtil;
+import dbhandler.DBInitializer;
 
 import java.io.*;
 import java.net.*;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-
-/**
- * @author Harish T
- */
 public class ProxyServer extends Thread {
-    public static void main(String[] args) {
+    private static final Logger logger = Logger.getLogger(ProxyServer.class.getName());
 
+    public static void main(String[] args) {
+        // Main method implementation
     }
 
     private String host;
-    private int port;
+    private int port = -1;
     private int requestSize;
     private int responseSize;
-    private InputStream proxyToClientIP;
-    private OutputStream proxyToClientOP;
-    private InputStream proxyToServerIP;
-    private OutputStream proxyToServerOP;
-    private Socket socket;
-    private Socket socketFromProxyServer;
+    private InputStream proxyServerIPStream;
+    private OutputStream proxyServerOPStream;
+    private InputStream hostServerIPStream;
+    private OutputStream hostServerOPStream;
+    private final Socket proxySocket;
+    private Socket hostServerSocket;
     private String method;
     private byte[] headInfo = new byte[1024];
     private String protocol;
 
-
     ProxyServer(Socket socket) {
-        this.socket = socket;
+        this.proxySocket = socket;
         this.start();
     }
 
     public void run() {
         try {
-            proxyToClientIP = socket.getInputStream();
-            proxyToClientOP = socket.getOutputStream();
+            proxyServerIPStream = proxySocket.getInputStream();
+            proxyServerOPStream = proxySocket.getOutputStream();
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             int c;
-            //Read First Line line ending with /r/n to get Host Details.
-            for (c = proxyToClientIP.read(); c != -1; c = proxyToClientIP.read()) {
+            for (c = proxyServerIPStream.read(); c != -1; c = proxyServerIPStream.read()) {
                 bytes.write(c);
                 if (c == (int) '\n') break;
             }
@@ -51,75 +50,43 @@ public class ProxyServer extends Thread {
             requestSize += bytes.size();
             String[] hostDetails = hostHeader.split(" ");
             parseHostDetails(hostDetails);
-            //Write Custom Output
-            if (ConnectionFilters.isSiteBlocked(host)) {
-                String blockMessage = "<html>\n" +
-                        "<body>\n" +
-                        "<h1>Error!!</h1>\n" +
-                        "<div style=\"display:center;color:red;\">Site harish-4072 is Blocked </div>\n" +
-                        "</body>\n" +
-                        "</html>";
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyToClientOP));
-                writer.write("HTTP/1.1 200 Connection established\r\n");
-                writer.write("Content-Type:text/html\r\n\r\n");
-                writer.write(blockMessage);
-                writer.flush();
-                writer.close();
-            } else if (ConnectionFilters.isPortBlocked(port)) {
-                String blockMessage = "<html><body><h1> </h1><p> Site " + port + " is Blocked </p></body></html>";
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyToClientOP));
-                writer.write("HTTP/1.1 200 Connection established\r\n");
-                writer.write("Content-Type:text/html\r\n\r\n");
-                writer.write(blockMessage);
-                writer.flush();
-                writer.close();
-            } else if (ConnectionFilters.isProtocolBlocked(protocol)) {
-                String blockMessage = "<html><body><h1> </h1><p> Site " + port + " is Blocked </p></body></html>";
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyToClientOP));
-                writer.write("HTTP/1.1 200 Connection established\r\n");
-                writer.write("Content-Type:text/html\r\n\r\n");
-                writer.write(blockMessage);
-                writer.flush();
-                writer.close();
-            } else if (method.equalsIgnoreCase("connect")) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(proxyToClientIP));
+            securityFilter();
+            if (method.equalsIgnoreCase("connect")) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(proxyServerIPStream));
                 String temp;
-                //CleanUp Connect request Stream
                 while ((temp = reader.readLine()) != null) {
                     requestSize += temp.getBytes().length;
-                    if (temp.equals("")) break;
+                    if (temp.isEmpty()) break;
                 }
                 processHTTPSRequest();
             } else {
                 headInfo = bytes.toByteArray();
                 processHTTPRequest();
             }
-
         } catch (IOException ex) {
-            //  System.out.println(" Error in Run method" + ex);
+            logger.log(Level.SEVERE, "Error in run method", ex);
         } finally {
-            try {
-                proxyToClientIP.close();
-                proxyToServerIP.close();
-                proxyToClientOP.close();
-                proxyToServerOP.close();
-                socket.close();
-            } catch (Exception e) {
-                //  System.out.println(e);
-            }
+            closeResources();
+        }
+    }
+
+    private void securityFilter() throws IOException {
+        if (ConnectionFilters.isSiteBlocked(host) || ConnectionFilters.isPortBlocked(port) || ConnectionFilters.isProtocolBlocked(protocol)) {
+            String blockMessage = "<html><body><h1> </h1><p> Site is Blocked </p></body></html>";
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyServerOPStream));
+            writer.write("HTTP/1.1 400 Bad Request\r\n");
+            writer.write("Content-Type:text/html\r\n\r\n");
+            writer.write(blockMessage);
+            writer.flush();
+            writer.close();
         }
     }
 
     private void parseHostDetails(String[] hostDetail) {
         try {
             method = hostDetail[0];
-            if (method.equals("connect") || method.equals("CONNECT")) {
-                port = 443;
-                protocol = "https";
-            } else {
-                port = 80;
-                protocol = "http";
-            }
+            protocol = method.equalsIgnoreCase("connect") ? "https" : "http";
+            port = protocol.equalsIgnoreCase("http") ? 80 : 443;
             String urlString = hostDetail[1];
             if ("http".regionMatches(0, urlString, 0, 3)) {
                 urlString = urlString.substring(7);
@@ -129,98 +96,102 @@ public class ProxyServer extends Thread {
                 if (temp.contains("/")) {
                     temp = temp.substring(0, temp.indexOf("/"));
                 }
-                port = Integer.valueOf(temp);
+                port = Integer.parseInt(temp);
                 urlString = urlString.substring(0, urlString.indexOf(":"));
             } else if (urlString.contains("/")) {
                 urlString = urlString.substring(0, urlString.indexOf("/"));
             }
             host = urlString;
         } catch (ArrayIndexOutOfBoundsException ex) {
-            System.out.println(hostDetail);
+            logger.log(Level.WARNING, "Error parsing host details: " + Arrays.toString(hostDetail), ex);
         }
     }
-
 
     private void processHTTPRequest() {
         try {
-            socketFromProxyServer = new Socket(host, port);
-            proxyToServerOP = socketFromProxyServer.getOutputStream();
-            proxyToServerIP = socketFromProxyServer.getInputStream();
+            hostServerSocket = new Socket(host, port);
+            hostServerOPStream = hostServerSocket.getOutputStream();
+            hostServerIPStream = hostServerSocket.getInputStream();
             proxyRequest();
         } catch (IOException ex) {
-            //   System.out.println("In Processing Get Method" + ex);
+            logger.log(Level.SEVERE, "Error processing HTTP request", ex);
         }
     }
 
-    /**
-     * Need to Send Success response after Connecting to Server to create HTTPS Tunnel.
-     */
     private void processHTTPSRequest() {
         try {
-            socketFromProxyServer = new Socket(host, port);
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyToClientOP));
-            writer.write("HTTP/1.1 200 Connection established\r\n" + "\r\n");
+            hostServerSocket = new Socket(host, port);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(proxyServerOPStream));
+            writer.write("HTTP/1.1 200 Connection established\r\n\r\n");
             writer.flush();
-            proxyToServerOP = socketFromProxyServer.getOutputStream();
-            proxyToServerIP = socketFromProxyServer.getInputStream();
+            hostServerOPStream = hostServerSocket.getOutputStream();
+            hostServerIPStream = hostServerSocket.getInputStream();
             proxyRequest();
         } catch (IOException ex) {
-            //  System.out.println("In processing connect" + ex);
+            logger.log(Level.SEVERE, "Error processing HTTPS request", ex);
         }
     }
-
 
     private void proxyRequest() {
         try {
-            System.out.println("Host details is "+host);
-            Thread t = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        if (!method.equalsIgnoreCase("connect") && headInfo != null) {
-                            proxyToServerOP.write(headInfo, 0, headInfo.length);
-                            proxyToServerOP.flush();
-                        }
-                        byte[] read = new byte[1024];
-                        int in;
-                        while ((in = proxyToClientIP.read(read)) != -1) {
-                            requestSize += in;
-                            proxyToServerOP.write(read, 0, in);
-                            proxyToServerOP.flush();
-                        }
-                        proxyToServerOP.close();
-                        proxyToClientIP.close();
-                    } catch (IOException ex) {
-                        // System.out.println("Exception in Proxy to Server Method" + ex);
+            logger.info("Host details: " + host);
+            Thread t = new Thread(() -> {
+                try {
+                    if (!method.equalsIgnoreCase("connect") && headInfo != null) {
+                        hostServerOPStream.write(headInfo, 0, headInfo.length);
+                        hostServerOPStream.flush();
                     }
+                    byte[] read = new byte[1024];
+                    int in;
+                    while ((in = proxyServerIPStream.read(read)) != -1) {
+                        requestSize += in;
+                        hostServerOPStream.write(read, 0, in);
+                        hostServerOPStream.flush();
+                    }
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, "Exception in proxy to server method", ex);
+                } finally {
+                    closeStreams(proxyServerIPStream, hostServerOPStream);
                 }
-            };
+            });
             t.start();
             byte[] reply = new byte[1024];
             int out;
-            while ((out = proxyToServerIP.read(reply)) != -1) {
+            while ((out = hostServerIPStream.read(reply)) != -1) {
                 responseSize += out;
-                proxyToClientOP.write(reply, 0, out);
-                proxyToClientOP.flush();
+                proxyServerOPStream.write(reply, 0, out);
+                proxyServerOPStream.flush();
             }
-            try {
-                t.join();
-                System.out.println(responseSize);
-            } catch (InterruptedException ex) {
-                System.out.println("interrupted error" + ex);
-            }
-            try {
-                new DBOperationUtil().runQuery(host, port, protocol, requestSize, responseSize);
-            } catch (SQLException ex) {
-                System.out.println("sql exception=" + ex);
-            }
-            proxyToClientOP.close();
-            proxyToServerIP.close();
-        } catch (IOException ex) {
-            // System.out.println("Exception in Proxy to Client method" + ex);
+            t.join();
+            logger.info("Response size: " + responseSize);
+            DBInitializer.getInstance().runQuery(host, port, protocol, requestSize, responseSize);
+        } catch (IOException | InterruptedException | SQLException ex) {
+            logger.log(Level.SEVERE, "Exception in proxy to client method", ex);
+        } finally {
+            closeResources();
         }
     }
 
+    private void closeResources() {
+        closeStreams(proxyServerIPStream, hostServerIPStream, proxyServerOPStream, hostServerOPStream);
+        try {
+            if (proxySocket != null && !proxySocket.isClosed()) {
+                proxySocket.close();
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Error closing proxy socket", ex);
+        }
+    }
 
+    private void closeStreams(Closeable... streams) {
+        for (Closeable stream : streams) {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, "Error closing stream", ex);
+                }
+            }
+        }
+    }
 }
-

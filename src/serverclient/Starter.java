@@ -15,17 +15,15 @@ import java.sql.SQLException;
  */
 public class Starter {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         try {
-            JSONObject jsonObject = new JSONObject(new FileReader(new File("E:\\ProxyServer\\conf\\Rules.json")));
+            JSONObject jsonObject = new JSONObject(new FileReader("conf\\Rules.json"));
+            addRules(jsonObject);
         } catch (IOException ex) {
             System.out.println("JSON Exception" + ex);
         }
-        try {
-            DBInitializer.initDB();
-        } catch (SQLException ex) {
-            System.exit(0);
-        }
+        DBInitializer dbInitializer = DBInitializer.getInstance();
+        dbInitializer.initDB();
         Server.proxyListener();
     }
 

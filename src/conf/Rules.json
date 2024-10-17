@@ -1,0 +1,3 @@
+{"sites":["google.com","facebook.com"],
+"ports":[8020,80],
+"protocol":["http"]}

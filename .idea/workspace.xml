@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5125ed89-6a12-41f3-8db2-949bc0a23fb2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/conf/DBConfiguration.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/conf/Rules.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/serverclient/SecurityFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/configurations/ConnectionFilters.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/configurations/ConnectionFilters.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/configurations/ConnectionsData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/configurations/ConnectionsData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dbhandler/DBInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dbhandler/DBInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dbhandler/DBOperationUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serverclient/ProxyServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serverclient/ProxyServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serverclient/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serverclient/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serverclient/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serverclient/Starter.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2nW4vV6XBmvZVSUgG730uWo3SsT" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Starter.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/my_projects/ProxyServer/src",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\my_projects\ProxyServer\src" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\my_projects\ProxyServer\src" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Starter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="serverclient.Starter" />
+      <module name="ProxyServer" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="serverclient.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Starter" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5125ed89-6a12-41f3-8db2-949bc0a23fb2" name="Changes" comment="" />
+      <created>1729075728393</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1729075728393</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/serverclient/ProxyServer.java</url>
+          <line>98</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
